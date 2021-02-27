@@ -17,14 +17,12 @@ acuity.ModelFactory = class {
         return false;
     }
 
-    open(context, host) {
-        return acuity.Metadata.open(host).then((metadata) => {
+    open(context) {
+        return acuity.Metadata.open(context).then((metadata) => {
             const extension = context.identifier.split('.').pop().toLowerCase();
             switch (extension) {
                 case 'json': {
-                    const buffer = context.stream.peek();
-                    const reader = json.TextReader.create(buffer);
-                    const model = reader.read();
+                    const model = context.tags('json').get('');
                     if (model && model.MetaData && model.Layers) {
                         return new acuity.Model(metadata, model);
                     }
@@ -380,11 +378,11 @@ acuity.Tensor = class {
 
 acuity.Metadata = class {
 
-    static open(host) {
+    static open(context) {
         if (acuity.Metadata._metadata) {
             return Promise.resolve(acuity.Metadata._metadata);
         }
-        return host.request(null, 'acuity-metadata.json', 'utf-8').then((data) => {
+        return context.request('acuity-metadata.json', 'utf-8', null).then((data) => {
             acuity.Metadata._metadata = new acuity.Metadata(data);
             return acuity.Metadata._metadata;
         }).catch(() => {

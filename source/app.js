@@ -95,10 +95,10 @@ class Application {
             this._configuration.set('userId', this._uuid());
         }
         if (this._openFileQueue) {
-            const openFileQueue = this._openFileQueue;
+            const queue = this._openFileQueue;
             this._openFileQueue = null;
-            while (openFileQueue.length > 0) {
-                const file = openFileQueue.shift();
+            while (queue.length > 0) {
+                const file = queue.shift();
                 this._openFile(file);
             }
         }
@@ -133,6 +133,7 @@ class Application {
                     'mlmodel',
                     'caffemodel',
                     'model', 'dnn', 'cmf', 'mar', 'params',
+                    'pdmodel', 'pdparams',
                     'meta',
                     'tflite', 'lite', 'tfl',
                     'armnn', 'mnn', 'nn', 'uff', 'uff.txt', 'rknn',
@@ -140,7 +141,8 @@ class Application {
                     'pt', 'pth', 't7',
                     'pkl', 'joblib',
                     'pbtxt', 'prototxt',
-                    'cfg', 'xml' ] }
+                    'cfg', 'xml',
+                    'zip', 'tar' ] }
             ]
         };
         const selectedFiles = electron.dialog.showOpenDialogSync(showOpenDialogOptions);

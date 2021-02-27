@@ -29,6 +29,7 @@ darknet.ModelFactory = class {
                         if (text.startsWith('[') && text.endsWith(']')) {
                             return true;
                         }
+                        return false;
                     }
                 }
                 catch (err) {
@@ -39,8 +40,8 @@ darknet.ModelFactory = class {
         return false;
     }
 
-    open(context, host) {
-        return darknet.Metadata.open(host).then((metadata) => {
+    open(context) {
+        return darknet.Metadata.open(context).then((metadata) => {
             const open = (metadata, cfg, weights) => {
                 return new darknet.Model(metadata, cfg, darknet.Weights.open(weights));
             };
@@ -219,7 +220,7 @@ darknet.Graph = class {
                 break;
             }
             default: {
-                throw new darknet.Error("First section must be [net] or [network].");
+                throw new darknet.Error("Unexpected '[" + net.type + "]' section. First section must be [net] or [network].");
             }
         }
 
@@ -364,8 +365,8 @@ darknet.Graph = class {
                         layer.out_w = params.w;
                         layer.out_c = params.c;
                         layer.out = layer.in;
-                        load_batch_normalize_weights(weights, section, '', layer.out);
-                        layer.outputs[0].type = new darknet.TensorType('float32', make_shape([ layer.ouputs ], 'batchnorm'));
+                        load_batch_normalize_weights(layer, '', layer.out_c);
+                        layer.outputs[0].type = new darknet.TensorType('float32', make_shape([ layer.out_w, layer.out_h, layer.out_c ], 'batchnorm'));
                         break;
                     }
                     case 'activation': {
@@ -373,7 +374,7 @@ darknet.Graph = class {
                         layer.out_w = params.w;
                         layer.out_c = params.c;
                         layer.out = layer.in;
-                        layer.outputs[0].type = new darknet.TensorType('float32', make_shape([ layer.ouputs ], 'activation'));
+                        layer.outputs[0].type = new darknet.TensorType('float32', make_shape([ layer.out_w, layer.out_h, layer.out_c ], 'activation'));
                         break;
                     }
                     case 'max':
@@ -1142,11 +1143,11 @@ darknet.Weights = class {
 
 darknet.Metadata = class {
 
-    static open(host) {
+    static open(context) {
         if (darknet.Metadata._metadata) {
             return Promise.resolve(darknet.Metadata._metadata);
         }
-        return host.request(null, 'darknet-metadata.json', 'utf-8').then((data) => {
+        return context.request('darknet-metadata.json', 'utf-8', null).then((data) => {
             darknet.Metadata._metadata = new darknet.Metadata(data);
             return darknet.Metadata._metadata;
         }).catch(() => {
